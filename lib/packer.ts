@@ -94,6 +94,7 @@ export class Packer {
         : this.small_atom([110, 105, 108]);
       case "undefined": return this.small_atom([110, 105, 108]);
     }
+    throw new Error("Unsupport type");
   };
 
   pack(value: unknown) {

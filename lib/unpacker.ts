@@ -60,8 +60,9 @@ export class Unpacker {
   }
 
   #unpack = () => {
+    const term = this.#u8();
     // deno-fmt-ignore-next-line
-    switch (this.#u8()) {
+    switch (term) {
       case atom_ext: return unpack_atom(this.unpack_string(this.#u16()));
       case binary_ext: return this.unpack_string(this.#u32());
       case float_ext: return parseFloat(this.unpack_string(31));
@@ -75,6 +76,7 @@ export class Unpacker {
       case small_integer_ext: return this.#i8();
       case small_tuple_ext: return this.unpack_list(this.#u8());
     }
+    throw new Error(`Unsupported term '${term}'`);
   };
 
   unpack(uint8: Uint8Array) {
