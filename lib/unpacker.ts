@@ -3,12 +3,14 @@ import {
   binary_ext,
   float_ext,
   integer_ext,
+  large_big_ext,
   large_tuple_ext,
   list_ext,
   map_ext,
   new_float_ext,
   nil_ext,
   small_atom_ext,
+  small_big_ext,
   small_integer_ext,
   small_tuple_ext,
 } from "./terms.ts";
@@ -59,6 +61,31 @@ export class Unpacker {
     return this.#decoder.decode(sub);
   }
 
+  unpack_large_big(digits: number) {
+    const sign = this.#u8();
+    let value = 0n;
+    let b = 1n;
+    for (let i = 0; i < digits; i++) {
+      value += BigInt(this.#u8()) * b;
+      b <<= 8n;
+    }
+    return sign ? -value : value;
+  }
+
+  unpack_small_big(digits: number) {
+    if (digits > 6) {
+      return this.unpack_large_big(digits);
+    }
+    const sign = this.#u8();
+    let value = 0;
+    let b = 1;
+    for (let i = 0; i < digits; i++) {
+      value += this.#u8() * b;
+      b <<= 8;
+    }
+    return sign ? -value : value;
+  }
+
   #unpack = () => {
     const term = this.#u8();
     // deno-fmt-ignore-next-line
@@ -67,12 +94,14 @@ export class Unpacker {
       case binary_ext: return this.unpack_string(this.#u32());
       case float_ext: return parseFloat(this.unpack_string(31));
       case integer_ext: return this.#i32();
+      case large_big_ext: return this.unpack_large_big(this.#u32());
       case large_tuple_ext: return this.unpack_list(this.#u32());
       case list_ext: return this.unpack_list_ext(this.#u32());
       case map_ext: return this.unpack_map(this.#u32());
       case new_float_ext: return this.#f64();
       case nil_ext: return null;
       case small_atom_ext: return this.unpack_string(this.#u8());
+      case small_big_ext: return this.unpack_small_big(this.#u8());
       case small_integer_ext: return this.#i8();
       case small_tuple_ext: return this.unpack_list(this.#u8());
     }
