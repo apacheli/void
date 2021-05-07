@@ -19,7 +19,9 @@ import { add, E } from "./util.ts";
 
 const decoder = new TextDecoder();
 
-const i8 = (e: E) => e.view.getInt8(e.offset++),
+// deno-fmt-ignore-next-line
+const
+  i8 = (e: E) => e.view.getInt8(e.offset++),
   u8 = (e: E) => e.view.getUint8(e.offset++),
   u16 = (e: E) => e.view.getUint16(add(e)),
   i32 = (e: E) => e.view.getInt32(add(e, 4)),

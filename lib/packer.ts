@@ -31,7 +31,7 @@ const bigint = (e: E, int: bigint) => {
     u8(e, Number(int & 0xFFn));
   }
   e.view.setUint32(index, i);
-}
+};
 
 const small_atom = (e: E, atom: A) => {
   u8(e, small_atom_ext);
