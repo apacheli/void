@@ -13,6 +13,7 @@ import {
   small_big_ext,
   small_integer_ext,
   small_tuple_ext,
+string_ext,
 } from "./terms.ts";
 
 export class Unpacker {
@@ -104,6 +105,7 @@ export class Unpacker {
       case small_big_ext: return this.unpack_small_big(this.#u8());
       case small_integer_ext: return this.#i8();
       case small_tuple_ext: return this.unpack_list(this.#u8());
+      case string_ext: return this.unpack_string(this.#u16());
     }
     throw new Error(`Unsupported term '${term}'`);
   };
