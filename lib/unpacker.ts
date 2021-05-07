@@ -86,13 +86,13 @@ const unpack_term = (e: E) => {
     case map_ext: return unpack_map(e, u32(e));
     case new_float_ext: return f64(e);
     case nil_ext: return [];
-    case small_atom_ext: return unpack_string(e, u8(e));
+    case small_atom_ext: return unpack_atom(unpack_string(e, u8(e)));
     case small_big_ext: return unpack_small_big(e, u8(e));
     case small_integer_ext: return i8(e);
     case small_tuple_ext: return unpack_list(e, u8(e));
     case string_ext: return unpack_string(e, u16(e));
+    default: throw new Error(`Unsupported term '${term}'`);
   }
-  throw new Error(`Unsupported term '${term}'`);
 };
 
 const unpack_atom = (atom: string) => {
