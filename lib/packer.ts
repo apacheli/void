@@ -97,7 +97,7 @@ export const pack = (value: unknown) => {
   const e = {
     offset: 1,
     uint8,
-    view: new DataView(uint8),
+    view: new DataView(uint8.buffer),
   };
   pack_value(e, value);
   return uint8.subarray(0, e.offset);
