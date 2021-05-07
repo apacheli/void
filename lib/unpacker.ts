@@ -13,14 +13,21 @@ import {
   small_big_ext,
   small_integer_ext,
   small_tuple_ext,
-string_ext,
+  string_ext,
 } from "./terms.ts";
+
+interface UnpackerOptions {
+  bigint_string?: boolean;
+}
 
 export class Unpacker {
   #decoder = new TextDecoder();
   #offset = 1;
   #uint8!: Uint8Array;
   #view!: DataView;
+
+  constructor(public options: UnpackerOptions = { bigint_string: true }) {
+  }
 
   #i8 = () => this.#view.getInt8(this.#offset++);
   #u8 = () => this.#view.getUint8(this.#offset++);
@@ -64,13 +71,12 @@ export class Unpacker {
 
   unpack_large_big(digits: number) {
     const sign = this.#u8();
-    let value = 0n;
-    let b = 1n;
-    for (let i = 0; i < digits; i++) {
-      value += BigInt(this.#u8()) * b;
-      b <<= 8n;
+    let int = 0n;
+    for (let i = 0, b = 1n; i < digits; i++, b <<= 8n) {
+      int += BigInt(this.#u8()) * b;
     }
-    return sign ? -value : value;
+    int = sign ? -int : int;
+    return this.options?.bigint_string ? `${int}` : int;
   }
 
   unpack_small_big(digits: number) {
@@ -79,10 +85,8 @@ export class Unpacker {
     }
     const sign = this.#u8();
     let value = 0;
-    let b = 1;
-    for (let i = 0; i < digits; i++) {
+    for (let i = 0, b = 1; i < digits; i++, b <<= 8) {
       value += this.#u8() * b;
-      b <<= 8;
     }
     return sign ? -value : value;
   }
@@ -100,7 +104,7 @@ export class Unpacker {
       case list_ext: return this.unpack_list_ext(this.#u32());
       case map_ext: return this.unpack_map(this.#u32());
       case new_float_ext: return this.#f64();
-      case nil_ext: return null;
+      case nil_ext: return [];
       case small_atom_ext: return this.unpack_string(this.#u8());
       case small_big_ext: return this.unpack_small_big(this.#u8());
       case small_integer_ext: return this.#i8();
@@ -118,4 +122,12 @@ export class Unpacker {
   }
 }
 
-const unpack_atom = (atom: string) => atom === "nil" ? null : atom;
+const unpack_atom = (atom: string) => {
+  // deno-fmt-ignore-next-line
+  switch (atom) {
+    case "false": return false;
+    case "nil": return null;
+    case "true": return true;
+    default: return atom;
+  }
+};
