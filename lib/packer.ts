@@ -9,99 +9,106 @@ import {
   small_integer_ext,
 } from "./terms.ts";
 
-export class Packer {
-  #encoder = new TextEncoder();
-  #offset!: number;
-  #uint8!: Uint8Array;
-  #view!: DataView;
-
-  #set = (b: number[] | Uint8Array) => this.#uint8.set(b, this.add(b.length));
-  #u8 = (v: number) => this.#view.setUint8(this.#offset++, v);
-  #u32 = (v: number) => this.#view.setUint32(this.add(4), v);
-  #f64 = (v: number) => this.#view.setFloat64(this.add(8), v);
-
-  add(addend = 2) {
-    const before_offset = this.#offset;
-    this.#offset += addend;
-    return before_offset;
-  }
-
-  small_atom(atom: number[] | Uint8Array) {
-    this.#u8(small_atom_ext);
-    this.#u8(atom.length);
-    this.#set(atom);
-  }
-
-  js_number(num: number) {
-    if (!Number.isInteger(num)) {
-      return this.new_float(num);
-    } else if (num < 128 && num > -128) {
-      return this.small_int(num);
-    }
-    this.int(num);
-  }
-
-  int(int: number) {
-    this.#u8(integer_ext);
-    this.#u32(int);
-  }
-
-  small_int(int: number) {
-    this.#u8(small_integer_ext);
-    this.#u8(int);
-  }
-
-  new_float(float: number) {
-    this.#u8(new_float_ext);
-    this.#f64(float);
-  }
-
-  string(str: string) {
-    this.#u8(binary_ext);
-    this.#u32(str.length);
-    this.#set(this.#encoder.encode(str));
-  }
-
-  list(list: unknown[]) {
-    if (list.length > 1) {
-      this.#u8(list_ext);
-      this.#u32(list.length);
-      for (let i = 0; i < list.length; i++) {
-        this.#pack(list[i]);
-      }
-    }
-    this.#u8(nil_ext);
-  }
-
-  map(map: any) {
-    const keys = Object.keys(map);
-    this.#u8(map_ext);
-    this.#u32(keys.length);
-    for (const key of keys) {
-      this.#pack(key);
-      this.#pack(map[key]);
-    }
-  }
-
-  #pack = (value: unknown) => {
-    // deno-fmt-ignore-next-line
-    switch (typeof value) {
-      case "boolean": return this.small_atom(this.#encoder.encode(`${value}`));
-      case "number": return this.js_number(value);
-      case "string": return this.string(value);
-      case "object": return value
-        ? Array.isArray(value) ? this.list(value) : this.map(value)
-        : this.small_atom([110, 105, 108]);
-      case "undefined": return this.small_atom([110, 105, 108]);
-    }
-    throw new Error("Unsupport type");
-  };
-
-  pack(value: unknown) {
-    this.#offset = 1;
-    this.#uint8 = new Uint8Array(2048).fill(131, 0, 1);
-    this.#view = new DataView(this.#uint8.buffer);
-    this.#pack(value);
-    return this.#uint8.subarray(0, this.#offset);
-  }
+interface P {
+  offset: number;
+  uint8: Uint8Array;
+  view: DataView;
 }
+type A = number[] | Uint8Array;
+
+const encoder = new TextEncoder();
+
+const add = (addend = 2, p: P) => {
+  const before_offset = p.offset;
+  p.offset += addend;
+  return before_offset;
+};
+
+// deno-fmt-ignore-next-line
+const
+  set = (p: P, b: A) => p.uint8.set(b, add(b.length, p)),
+  u8 = (p: P, v: number) => p.view.setUint8(p.offset++, v),
+  u32 = (p: P, v: number) => p.view.setUint32(add(4, p), v),
+  f64 = (p: P, v: number) => p.view.setFloat64(add(8, p), v);
+
+const small_atom = (p: P, atom: A) => {
+  u8(p, small_atom_ext);
+  u8(p, atom.length);
+  set(p, atom);
+};
+
+const js_number = (p: P, num: number) => {
+  if (!Number.isInteger(num)) {
+    return new_float(p, num);
+  } else if (num < 128 && num > -128) {
+    return small_int(p, num);
+  }
+  int(p, num);
+};
+
+const int = (p: P, int: number) => {
+  u8(p, integer_ext);
+  u32(p, int);
+};
+
+const small_int = (p: P, int: number) => {
+  u8(p, small_integer_ext);
+  u8(p, int);
+};
+
+const new_float = (p: P, float: number) => {
+  u8(p, new_float_ext);
+  f64(p, float);
+};
+
+const string = (p: P, str: string) => {
+  u8(p, binary_ext);
+  u32(p, str.length);
+  set(p, encoder.encode(str));
+};
+
+const list = (p: P, list: unknown[]) => {
+  if (list.length > 1) {
+    u8(p, list_ext);
+    u32(p, list.length);
+    for (let i = 0; i < list.length; i++) {
+      pack_value(p, list[i]);
+    }
+  }
+  u8(p, nil_ext);
+};
+
+const map = (p: P, map: any) => {
+  const keys = Object.keys(map);
+  u8(p, map_ext);
+  u32(p, keys.length);
+  for (const key of keys) {
+    pack_value(p, key);
+    pack_value(p, map[key]);
+  }
+};
+
+const pack_value = (p: P, value: unknown) => {
+  // deno-fmt-ignore-next-line
+  switch (typeof value) {
+    case "boolean": return small_atom(p, encoder.encode(`${value}`));
+    case "number": return js_number(p, value);
+    case "string": return string(p, value);
+    case "object": return value
+      ? Array.isArray(value) ? list(p, value) : map(p, value)
+      : small_atom(p, [110, 105, 108]);
+    case "undefined": return small_atom(p, [110, 105, 108]);
+    default: throw new Error("Unsupport type");
+  }
+};
+
+export const pack = (value: unknown) => {
+  const uint8 = new Uint8Array(2048).fill(131, 0, 1);
+  const p = {
+    offset: 1,
+    uint8,
+    view: new DataView(uint8),
+  };
+  pack_value(p, value);
+  return uint8.subarray(0, p.offset);
+};

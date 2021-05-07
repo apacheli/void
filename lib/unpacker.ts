@@ -17,7 +17,7 @@ import {
 } from "./terms.ts";
 
 interface UnpackerOptions {
-  bigint_string?: boolean;
+  stringify_bigints?: boolean;
 }
 
 export class Unpacker {
@@ -26,7 +26,7 @@ export class Unpacker {
   #uint8!: Uint8Array;
   #view!: DataView;
 
-  constructor(public options: UnpackerOptions = { bigint_string: true }) {
+  constructor(public options: UnpackerOptions = { stringify_bigints: true }) {
   }
 
   #i8 = () => this.#view.getInt8(this.#offset++);
@@ -76,7 +76,7 @@ export class Unpacker {
       int += BigInt(this.#u8()) * b;
     }
     int = sign ? -int : int;
-    return this.options?.bigint_string ? `${int}` : int;
+    return this.options?.stringify_bigints ? `${int}` : int;
   }
 
   unpack_small_big(digits: number) {
@@ -84,11 +84,11 @@ export class Unpacker {
       return this.unpack_large_big(digits);
     }
     const sign = this.#u8();
-    let value = 0;
+    let int = 0;
     for (let i = 0, b = 1; i < digits; i++, b <<= 8) {
-      value += this.#u8() * b;
+      int += this.#u8() * b;
     }
-    return sign ? -value : value;
+    return sign ? -int : int;
   }
 
   #unpack = () => {
