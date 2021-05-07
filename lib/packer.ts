@@ -58,7 +58,7 @@ const string = (e: E, str: string) => {
 };
 
 const list = (e: E, list: unknown[]) => {
-  if (list.length > 1) {
+  if (list.length > 0) {
     u8(e, list_ext);
     u32(e, list.length);
     for (let i = 0; i < list.length; i++) {
