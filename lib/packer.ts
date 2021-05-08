@@ -101,7 +101,7 @@ const pack_value = (e: E, value: unknown) => {
       : small_atom(e, [110, 105, 108]);
     case "string": return string(e, value);
     case "undefined": return small_atom(e, [110, 105, 108]);
-    default: throw new Error("Unsupport type");
+    default: throw new Error(`Unsupported type '${typeof value}'`);
   }
 };
 
