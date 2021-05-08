@@ -13,7 +13,7 @@ import { add, E } from "./util.ts";
 
 type A = number[] | Uint8Array;
 
-const encoder = new TextEncoder();
+const encoder = (Deno as any).core ?? new TextEncoder();
 
 // deno-fmt-ignore-next-line
 const
@@ -78,9 +78,9 @@ const map = (e: E, map: any) => {
   const keys = Object.keys(map);
   u8(e, map_ext);
   u32(e, keys.length);
-  for (const key of keys) {
-    pack_value(e, key);
-    pack_value(e, map[key]);
+  for (let i = 0; i < keys.length; i++) {
+    pack_value(e, keys[i]);
+    pack_value(e, map[keys[i]]);
   }
 };
 

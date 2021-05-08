@@ -17,7 +17,7 @@ import {
 } from "./terms.ts";
 import { add, E } from "./util.ts";
 
-const decoder = new TextDecoder();
+const decoder = (Deno as any).core ?? new TextDecoder();
 
 // deno-fmt-ignore-next-line
 const
