@@ -58,7 +58,7 @@ const unpack_string = (e: E, len: number) => {
 const unpack_large_big = (e: E, digits: number) => {
   const sign = u8(e);
   let int = 0n;
-  for (let i = 0, b = 1n; i < digits; i++, b <<= 8n) {
+  for (let i = 0, b = 1n; i < digits; i++, b *= 256n) {
     int += BigInt(u8(e)) * b;
   }
   int = sign ? -int : int;
@@ -68,7 +68,7 @@ const unpack_large_big = (e: E, digits: number) => {
 const unpack_small_big = (e: E, digits: number) => {
   const sign = u8(e);
   let int = 0;
-  for (let i = 0, b = 1; i < digits; i++, b <<= 8) {
+  for (let i = 0, b = 1; i < digits; i++, b *= 256) {
     int += u8(e) * b;
   }
   return sign ? -int : int;

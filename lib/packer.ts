@@ -27,8 +27,8 @@ const bigint = (e: E, int: bigint) => {
   const index = add(e, 4);
   u8(e, int < 0n ? 1 : 0);
   let i = 0;
-  for (; int > 0; i++, int >>= 8n) {
-    u8(e, Number(int & 0xFFn));
+  for (; int > 0; i++, int /= 256n) {
+    u8(e, Number(int % 256n));
   }
   e.view.setUint32(index, i);
 };
