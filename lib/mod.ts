@@ -1,3 +1,3 @@
-export * from "./packer.ts";
+export * from "./pack.ts";
 export * as terms from "./terms.ts";
-export * from "./unpacker.ts";
+export * from "./unpack.ts";

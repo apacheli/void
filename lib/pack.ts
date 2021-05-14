@@ -13,7 +13,7 @@ import { add, E } from "./util.ts";
 
 type A = number[] | Uint8Array;
 
-const encoder = (Deno as any).core ?? new TextEncoder();
+const encoder = (window.Deno as any)?.core ?? new TextEncoder();
 
 // deno-fmt-ignore-next-line
 const

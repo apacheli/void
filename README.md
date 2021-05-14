@@ -5,7 +5,7 @@ data. Written in [TypeScript](https://www.typescriptlang.org/) for
 [Deno](https://deno.land/).
 
 ```ts
-import { pack, unpack } from "https://deno.land/x/void@0.1.0/mod.ts";
+import { pack, unpack } from "https://deno.land/x/void@0.1.2/mod.ts";
 
 const packed = pack({
   a: true,
