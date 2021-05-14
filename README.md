@@ -4,8 +4,10 @@ Packs and unpacks [ETF](https://erlang.org/doc/apps/erts/erl_ext_dist.html)
 data. Written in [TypeScript](https://www.typescriptlang.org/) for
 [Deno](https://deno.land/).
 
+This can pack most JavaScript types except `symbol` and `undefined`.
+
 ```ts
-import { pack, unpack } from "https://deno.land/x/void@0.1.2/mod.ts";
+import { pack, unpack } from "https://deno.land/x/void@1.0.3/mod.ts";
 
 const packed = pack({
   a: true,
