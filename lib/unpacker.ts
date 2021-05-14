@@ -66,6 +66,9 @@ const unpack_large_big = (e: E, digits: number) => {
 };
 
 const unpack_small_big = (e: E, digits: number) => {
+  if (digits > 6) {
+    return unpack_large_big(e, digits);
+  }
   const sign = u8(e);
   let int = 0;
   for (let i = 0, b = 1; i < digits; i++, b *= 256) {
