@@ -39,14 +39,10 @@ const small_atom = (e: E, atom: A) => {
   set(e, atom);
 };
 
-const js_number = (e: E, num: number) => {
-  if (!Number.isInteger(num)) {
-    return new_float(e, num);
-  } else if (num < 128 && num > -128) {
-    return small_int(e, num);
-  }
-  int(e, num);
-};
+const js_number = (e: E, num: number) =>
+  (Number.isInteger(num)
+    ? num < 128 && num > -128 ? small_int : int
+    : new_float)(e, num);
 
 const new_float = (e: E, float: number) => {
   u8(e, new_float_ext);
