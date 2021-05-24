@@ -13,7 +13,8 @@ import { add, E } from "./util.ts";
 
 type A = number[] | Uint8Array;
 
-const encoder = (window.Deno as any)?.core ?? new TextEncoder();
+const encode = (globalThis as any).Deno?.core.encode ??
+  ((c) => (input?: string) => c.encode(input))(new TextEncoder());
 
 // deno-fmt-ignore-next-line
 const
@@ -74,27 +75,29 @@ const map = (e: E, map: any) => {
   const keys = Object.keys(map);
   u8(e, map_ext);
   u32(e, keys.length);
-  for (let i = 0; i < keys.length; i++) {
-    pack_value(e, keys[i]);
-    pack_value(e, map[keys[i]]);
+  for (let i = 0, k = keys[i]; i < keys.length; k = keys[++i]) {
+    pack_value(e, k);
+    pack_value(e, map[k]);
   }
 };
 
 const string = (e: E, str: string) => {
   u8(e, binary_ext);
   u32(e, str.length);
-  set(e, encoder.encode(str));
+  set(e, encode(str));
 };
+
+const nil_utf8 = [110, 105, 108];
 
 const pack_value = (e: E, value: unknown) => {
   // deno-fmt-ignore-next-line
   switch (typeof value) {
     case "bigint": return bigint(e, value);
-    case "boolean": return small_atom(e, encoder.encode(`${value}`));
+    case "boolean": return small_atom(e, encode(`${value}`));
     case "number": return js_number(e, value);
     case "object": return value
-      ? Array.isArray(value) ? list(e, value) : map(e, value)
-      : small_atom(e, [110, 105, 108]);
+      ? value.constructor === Array ? list(e, value) : map(e, value)
+      : small_atom(e, nil_utf8);
     case "string": return string(e, value);
     default: throw new Error(`Unsupported type '${typeof value}'`);
   }

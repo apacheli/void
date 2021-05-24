@@ -7,7 +7,7 @@ data. Written in [TypeScript](https://www.typescriptlang.org/) for
 This can pack most JavaScript types except `symbol` and `undefined`.
 
 ```ts
-import { pack, unpack } from "https://deno.land/x/void@1.0.3/mod.ts";
+import { pack, unpack } from "https://deno.land/x/void@1.0.4/mod.ts";
 
 const packed = pack({
   a: true,

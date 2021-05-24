@@ -17,7 +17,8 @@ import {
 } from "./terms.ts";
 import { add, E } from "./util.ts";
 
-const decoder = (window.Deno as any)?.core ?? new TextDecoder();
+const decode = (globalThis as any).Deno?.core.decode ??
+  ((c) => (input?: BufferSource) => c.decode(input))(new TextDecoder());
 
 // deno-fmt-ignore-next-line
 const
@@ -50,10 +51,8 @@ const unpack_map = (e: E, len: number) => {
   return map;
 };
 
-const unpack_string = (e: E, len: number) => {
-  const sub = e.uint8.subarray(add(e, len), e.offset);
-  return decoder.decode(sub);
-};
+const unpack_string = (e: E, len: number) =>
+  decode(e.uint8.subarray(add(e, len), e.offset));
 
 const unpack_large_big = (e: E, digits: number) => {
   const sign = u8(e);
@@ -110,12 +109,10 @@ const unpack_atom = (atom: string) => {
   }
 };
 
-export const unpack = (uint8: Uint8Array, stringify_bigints = true) => {
-  const e = {
+export const unpack = (uint8: Uint8Array, stringify_bigints = true) =>
+  unpack_term({
     offset: 1,
     stringify_bigints,
     uint8,
     view: new DataView(uint8.buffer),
-  };
-  return unpack_term(e);
-};
+  });
